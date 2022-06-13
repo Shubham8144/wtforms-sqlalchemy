@@ -142,13 +142,28 @@ class ModelConverterBase:
             for pair in prop.local_remote_pairs:
                 if not pair[0].nullable:
                     nullable = False
-
-            kwargs.update(
+                    
+            if str(prop.__dict__.get('_dependency_processor'))=='ManyToOneDP(Shipment.supplier)':
+                kwargs.update(
+                    {
+                        "allow_blank": nullable,
+                        "query_factory": lambda: db_session.query(foreign_model).filter_by(user_status='supplier').all(),
+                    }
+                )
+            elif str(prop.__dict__.get('_dependency_processor'))=='ManyToOneDP(Shipment.customer)':
+                kwargs.update(
+                    {
+                        "allow_blank": nullable,
+                        "query_factory": lambda: db_session.query(foreign_model).filter_by(user_status='customer').all(),
+                    }
+                )                                
+            else:
+                kwargs.update(
                 {
                     "allow_blank": nullable,
                     "query_factory": lambda: db_session.query(foreign_model).all(),
                 }
-            )
+                )
 
             converter = self.converters[prop.direction.name]
 
